@@ -14,6 +14,8 @@ public class Tests
 	[Test]
 	public void Test()
 	{
+		int answer = 54953;
+		
 		var content = File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day1\\Input.txt");
 		var lines = content.Split('\n').ToList();
 
@@ -28,9 +30,7 @@ public class Tests
 			int amount = int.Parse(first + last);
 			sum += amount;
 		}
-		
-		Console.WriteLine(sum);
-		
-		Assert.Pass();
+
+		Assert.That(answer, Is.EqualTo(sum));
 	}
 }
