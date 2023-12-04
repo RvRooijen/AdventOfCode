@@ -3,14 +3,8 @@ using System.Text.RegularExpressions;
 
 namespace AdventOfCode.Tests;
 
-public class Tests
+public class Day1
 {
-	[SetUp]
-	public void Setup()
-	{
-		
-	}
-
 	[Test]
 	public void Test()
 	{
