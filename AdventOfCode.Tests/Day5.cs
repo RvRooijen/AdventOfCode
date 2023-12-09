@@ -4,12 +4,12 @@ namespace AdventOfCode.Tests;
 
 public class Day5
 {
-    private Dictionary<uint, uint> calculatedSeeds = new();
+    //private Dictionary<uint, uint> calculatedSeeds = new();
 
     [SetUp]
     public void Setup()
     {
-        calculatedSeeds = new Dictionary<uint, uint>();
+        //calculatedSeeds = new Dictionary<uint, uint>();
     }
 
     private class MapGroup
@@ -67,6 +67,32 @@ public class Day5
         return new MapGroup(mappings);
     }
 
+    private List<uint> GenerateOriginalSeeds()
+    {
+        var content = File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\Seeds.txt");
+
+        List<uint> initialSeeds = content
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(uint.Parse)
+            .ToList();
+        return initialSeeds;
+    }
+
+    private List<MapGroup> CreateMapGroups()
+    {
+        List<MapGroup> mapGroups = new()
+        {
+            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\SeedToSoil.txt")),
+            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\SoilToFertilizer.txt")),
+            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\FertilizerToWater.txt")),
+            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\WaterToLight.txt")),
+            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\LightToTemp.txt")),
+            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\TempToHumid.txt")),
+            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\HumidToLocation.txt"))
+        };
+        return mapGroups;
+    }
+    
     [Test]
     public void Example()
     {
@@ -125,7 +151,7 @@ public class Day5
     }
     
     [Test]
-    public void MultimapTest()
+    public void MultiSeedTest()
     {
         List<List<uint>> holder = new List<List<uint>>
         {
@@ -142,8 +168,8 @@ public class Day5
         List<MapGroup> mapGroups = new();
         List<Mapping> mappings = new List<Mapping>()
         {
+            new(52, 50, 48),
             new(50, 98, 2),
-            new(52, 50, 48)
         };
         mapGroups.Add(new MapGroup(mappings));
         
@@ -191,13 +217,49 @@ public class Day5
 
         globalMin.Should().Be(52);
     }
+    
+    [Test]
+    public void MultimapTest()
+    {
+        List<List<uint>> holder = new List<List<uint>>
+        {
+            new()
+            {
+                96,97
+            },
+            new()
+            {
+                50,51
+            }
+        };
+
+        List<MapGroup> mapGroups = new();
+        List<Mapping> mappings1 = new List<Mapping>()
+        {
+            new(50, 98, 2)
+        };
+        
+        List<Mapping> mappings2 = new List<Mapping>()
+        {
+            new(52, 50, 48)
+        };
+        
+        mapGroups.Add(new MapGroup(mappings1));
+        mapGroups.Add(new MapGroup(mappings2));
+        
+        var globalMin = GetMinimumFromHolder(holder, mapGroups);
+
+        globalMin.Should().Be(52);
+    }
 
     private uint GetMinimumFromHolder(List<List<uint>> holder, List<MapGroup> mapGroups)
     {
         uint globalMin = uint.MaxValue;
+        // Per seed range
         foreach (var seeds in holder)
         {
             var check = GetSmallestLocationFromSeeds(seeds, mapGroups);
+            Console.WriteLine(check);
             if (check < globalMin)
                 globalMin = check;
         }
@@ -207,34 +269,21 @@ public class Day5
 
     private uint GetSmallestLocationFromSeeds(List<uint> initialSeeds, List<MapGroup> mapGroups)
     {
-        uint min = uint.MaxValue;
-        foreach (var seed in initialSeeds)
-        {
-            var check = uint.MaxValue;
-            
-            if (calculatedSeeds.TryGetValue(seed, out var calculated))
+        return initialSeeds
+            .AsParallel()
+            .Min(seed =>
             {
-                check = calculated;
-            }
-            else
-            {
-                check = GetLocationFromSeed(seed, min, mapGroups);
-                calculatedSeeds.Add(seed, check);
-            }
-            
-            if (check < min)
-                min = check;
-        }
-        return min;
+                var check = GetLocationFromSeed(seed, mapGroups);
+                return check;
+            });
     }
 
-    private uint GetLocationFromSeed(uint seed, uint min, List<MapGroup> MapGroups)
+    private uint GetLocationFromSeed(uint seed, List<MapGroup> MapGroups)
     {
-        uint seedResult = MapGroups
+        return MapGroups
             .AsParallel()
             .Aggregate(seed, (currentSeed, group) => group
                 .Convert(currentSeed));
-        return Math.Min(seedResult, min);
     }
 
     [Test]
@@ -242,73 +291,48 @@ public class Day5
     {
         int answer = 3374647;
 
-        var content = File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\Seeds.txt");
-        
-        List<uint> initialSeeds = content
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            .Select(uint.Parse)
-            .ToList();
+        var initialSeeds = GenerateOriginalSeeds();
 
-        List<MapGroup> mapGroups = new()
-        {
-            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\SeedToSoil.txt")),
-            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\SoilToFertilizer.txt")),
-            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\FertilizerToWater.txt")),
-            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\WaterToLight.txt")),
-            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\LightToTemp.txt")),
-            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\TempToHumid.txt")),
-            CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\HumidToLocation.txt"))
-        };
+        var mapGroups = CreateMapGroups();
 
         var min = GetSmallestLocationFromSeeds(initialSeeds, mapGroups);
         min.Should().Be(3374647);
     }
     
-    /*[Test]
+    [Test]
     public void Part2()
     {
-        int answer = 3374647;
-
-        var content = File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\Seeds.txt");
-        
-        List<uint> initialSeeds = content
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            .Select(uint.Parse)
-            .ToList();
-
-        List<List<uint>> seeds = new List<List<uint>>();
-        for (var i = 0; i < initialSeeds.Count; i++)
+        List<List<uint>> GenerateSeedRange(List<uint> uints)
         {
-            if (i % 2 == 1)
+            List<List<uint>> list = new List<List<uint>>();
+            for (var i = 0; i < uints.Count; i++)
             {
-                var newList = new List<uint>();
-                for (uint j = initialSeeds[i-1]; j < initialSeeds[i-1] + initialSeeds[i]; j++)
+                if (i % 2 == 1)
                 {
-                    newList.Add(j);
+                    var newList = new List<uint>();
+                    for (uint j = uints[i - 1]; j < uints[i - 1] + uints[i]; j++)
+                    {
+                        newList.Add(j);
+                    }
+
+                    list.Add(newList);
                 }
-                seeds.Add(newList);
             }
+
+            return list;
         }
 
-        MapGroups.Add(CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\SeedToSoil.txt")));
-        MapGroups.Add(CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\SoilToFertilizer.txt")));
-        MapGroups.Add(CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\FertilizerToWater.txt")));
-        MapGroups.Add(CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\WaterToLight.txt")));
-        MapGroups.Add(CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\LightToTemp.txt")));
-        MapGroups.Add(CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\TempToHumid.txt")));
-        MapGroups.Add(CreateMapping(File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day5\\HumidToLocation.txt")));
+        int answer = 3374647;
 
-        var lowest = seeds
-            .AsParallel()
-            .Select(seed => seed
-                .AsParallel()
-                .Select(seed => MapGroups
-                    .AsParallel()
-                    .Aggregate(seed, (current, group) => group
-                        .Convert(current)))
-                .Min())
-            .Min();
+        var initialSeeds = GenerateOriginalSeeds();
+        List<uint> testSeeds = new List<uint> { initialSeeds[4], initialSeeds[5] };
+
+        var seeds = GenerateSeedRange(testSeeds);
+
+        var mapGroups = CreateMapGroups();
+
+        var lowest = GetMinimumFromHolder(seeds, mapGroups);
 
         Console.WriteLine(lowest);
-    }*/
+    }
 }
