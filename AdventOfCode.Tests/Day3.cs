@@ -160,13 +160,13 @@ public class Day3
     [Test]
     public void Part2()
     {
-        int answer = 539590;
+        int answer = 80703636;
         var schematic = new Schematic();
 
         int x = schematic.Calculate2();
         
         Console.WriteLine(x);
         
-        Assert.Pass();
+        Assert.That(answer, Is.EqualTo(x));
     }
 }
