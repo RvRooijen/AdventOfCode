@@ -15,32 +15,95 @@ public class Day2
 	Regex numbersRegex = new Regex(@"(-?\d+)");
 	
 	[Test]
-	public void Test()
+	public void Part1()
 	{
 		int answer = 2265;
 		
 		var content = File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day2\\Input.txt");
 		var games = content.Split('\n').ToList();
 
-		var sum = games.Select(IsGamePossible)
-			.Where(tuple => tuple.isPossible)
-			.Sum(tuple => tuple.id);
+		var sum = games.Select(GetGameInfo)
+			.Where(tuple => tuple.IsPossible)
+			.Sum(tuple => tuple.Id);
 		
 		Assert.That(answer, Is.EqualTo(sum));
 	}
 
-	(bool isPossible, int id) IsGamePossible(string game)
+	private class ColorValue
+	{
+		public Colors Color;
+		public int Number;
+
+		public ColorValue(Colors color, int number)
+		{
+			Color = color;
+			Number = number;
+		}
+	}
+	
+	private class GameInfo
+	{
+		public bool IsPossible;
+		public int Id;
+		public List<ColorValue> ColorValues;
+
+		public GameInfo(bool isPossible, int id, List<ColorValue> colorValues)
+		{
+			IsPossible = isPossible;
+			Id = id;
+			ColorValues = colorValues;
+		}
+	}
+	
+	GameInfo GetGameInfo(string game)
 	{
 		var splitted = game.Split(new[] { ",", ";", ":" }, StringSplitOptions.TrimEntries);
 		var id = int.Parse(numbersRegex.Match(splitted[0]).Value);
-		
-		var possible = splitted
+
+		var colors = splitted
 			.Skip(1)
 			.Select(GetColor)
-			.ToList()
-			.TrueForAll(tuple => tuple.n <= maxColors[tuple.c]);
+			.Select(tuple => new ColorValue(tuple.c, tuple.n))
+			.ToList();
+
+		var possible = colors
+			.TrueForAll(tuple => tuple.Number <= maxColors[tuple.Color]);
+
+		return new GameInfo(possible, id, colors);
+	}
+
+	[Test]
+	public void Part2()
+	{
+		int answer = 2265;
 		
-		return (possible, id);
+		var content = File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day2\\Input.txt");
+		var games = content.Split('\n').ToList();
+
+		var gameInfo = games
+			.Select(GetGameInfo);
+
+		int sum = 0;
+		foreach (GameInfo info in gameInfo)
+		{
+			int power = 0;
+			var by = info.ColorValues.GroupBy(value => value.Color);
+			foreach (IGrouping<Colors,ColorValue> grouping in by)
+			{
+				var max = grouping.OrderByDescending(value => value.Number).First().Number;
+				if (power == 0)
+				{
+					power = max;
+					continue;
+				}
+
+				power *= max;
+			}
+
+			sum += power;
+		}
+		
+		Console.WriteLine(sum);
 	}
 	
 	(Colors c, int n) GetColor(string input) =>
