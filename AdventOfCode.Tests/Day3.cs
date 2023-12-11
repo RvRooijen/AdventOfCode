@@ -2,71 +2,124 @@
 
 public class Day3
 {
-    private char[][] schematic;
-    
-    [Test]
-    public void Test()
+    private class Schematic
     {
-        int answer = 539590;
-        
-        var content = File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day3\\Input.txt");
-        
-        var lines = content.Split('\n').ToList();
-        schematic = new char[lines.Count][];
-        for (int i = 0; i < lines.Count; i++)
+        private char[][] _grid;
+        private List<(int startX, int startY, int count, int number)> _numbers;
+        private List<(int x, int y)> _gears;
+
+        public Schematic()
         {
-            schematic[i] = lines[i].ToCharArray();
+            var content = File.ReadAllText("D:\\Projects\\AdventOfCode\\Input\\Day3\\Input.txt");
+
+            var lines = content.Split('\n').ToList();
+            _grid = new char[lines.Count][];
+            for (int i = 0; i < lines.Count; i++)
+            {
+                _grid[i] = lines[i].ToCharArray();
+            }
+            
+            PopuplateNumbers();
+            PopulateGears();
         }
 
-        // Get coordinates of all numbers
-        var numbers = new List<(int startX, int startY, int count, int number)>();
-        for (int y = 0; y < schematic.Length; y++)
+        public int Calculate1()
         {
-            for (int x = 0; x < schematic[y].Length; x++)
+            int sum = 0;
+            foreach ((int startX, int startY, int count, int number) number in _numbers)
             {
-                if (char.IsDigit(schematic[y][x]))
+                var adjacent = GetAdjacent(number.startX, number.startY, number.count);
+                if (adjacent.Any(c => c == '&' || c == '/' || c == '=' || c == '*' || c == '+' || c == '-' || c == '@' || c == '#' || c == '$' || c == '%'))
                 {
-                    int count = 1;
-                    while (x + count < schematic[y].Length && char.IsDigit(schematic[y][x + count]))
-                    {
-                        count++;
-                    }
+                    sum += number.number;
+                }
+            }
 
-                    numbers.Add((x, y, count, int.Parse(new string(schematic[y][x..(x + count)]))));
-                    x += count;
+            return sum;
+        }
+
+        /*public int Calculate2()
+        {
+            // If this gear has 2 adjacent 
+            foreach ((int x, int y) gear in _gears)
+            {
+                foreach ((int startX, int startY, int count, int number) number in _numbers)
+                {
+                    
+                }
+            }
+        }*/
+
+        private void PopuplateNumbers()
+        {
+            _numbers = new List<(int startX, int startY, int count, int number)>();
+            for (int y = 0; y < _grid.Length; y++)
+            {
+                for (int x = 0; x < _grid[y].Length; x++)
+                {
+                    if (char.IsDigit(_grid[y][x]))
+                    {
+                        int count = 1;
+                        while (x + count < _grid[y].Length && char.IsDigit(_grid[y][x + count]))
+                        {
+                            count++;
+                        }
+
+                        _numbers.Add((x, y, count, int.Parse(new string(_grid[y][x..(x + count)]))));
+                        x += count;
+                    }
                 }
             }
         }
 
-        int sum = 0;
-        foreach ((int startX, int startY, int count, int number) number in numbers)
+        private void PopulateGears()
         {
-            var adjacent = GetAdjacent(number.startX, number.startY, number.count);
-            if (adjacent.Any(c => c == '&' || c == '/' || c == '=' || c == '*' || c == '+' || c == '-' || c == '@' || c == '#' || c == '$' || c == '%'))
+            _gears = new List<(int x, int y)>();
+            for (int y = 0; y < _grid.Length; y++)
             {
-                sum += number.number;
+                for (int x = 0; x < _grid[y].Length; x++)
+                {
+                    if (_grid[y][x] == '*')
+                    {
+                        _gears.Add(new (x,y));
+                    }
+                }
             }
+            
         }
+
+        List<char> GetAdjacent(int x, int y, int size)
+        {
+            var adjacent = new List<char>();
+            for (int y1 = -1; y1 <= 1; y1++)
+            {
+                for (int x1 = -1; x1 <= size; x1++)
+                {
+                    if (x1 == 0 && y1 == 0) continue;
+                    if (x + x1 < 0 || x + x1 >= _grid.Length) continue;
+                    if (y + y1 < 0 || y + y1 >= _grid[y].Length) continue;
+                    adjacent.Add(_grid[y + y1][x + x1]);
+                }
+            }
+
+            return adjacent;
+        }
+    }
+    
+    [Test]
+    public void Part1()
+    {
+        int answer = 539590;
+        var schematic = new Schematic();
+
+        int x = schematic.Calculate1();
         
-        Console.WriteLine(sum);
-        
-        Assert.That(answer, Is.EqualTo(sum));
+        Assert.That(answer, Is.EqualTo(x));
     }
 
-    List<char> GetAdjacent(int x, int y, int size)
+    [Test]
+    public void Part2()
     {
-        var adjacent = new List<char>();
-        for (int y1 = -1; y1 <= 1; y1++)
-        {
-            for (int x1 = -1; x1 <= size; x1++)
-            {
-                if (x1 == 0 && y1 == 0) continue;
-                if (x + x1 < 0 || x + x1 >= schematic.Length) continue;
-                if (y + y1 < 0 || y + y1 >= schematic[y].Length) continue;
-                adjacent.Add(schematic[y + y1][x + x1]);
-            }
-        }
-
-        return adjacent;
+        
     }
 }
