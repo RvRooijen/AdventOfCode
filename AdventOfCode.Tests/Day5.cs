@@ -34,7 +34,7 @@ public class Day5
         public uint DestinationRangeStart { get; }
         public uint SourceRangeStart { get; }
         public uint RangeLength { get; }
-        private uint SourceRangeEnd => SourceRangeStart + RangeLength;
+        private uint SourceRangeEnd => SourceRangeStart + RangeLength -1;
         public uint DestinationRangeEnd => DestinationRangeStart + RangeLength;
 
         public bool IsInRange(uint x) => x >= SourceRangeStart && x <= SourceRangeEnd;
@@ -225,23 +225,23 @@ public class Day5
         {
             new()
             {
-                96,97
+                10, 5, 2
             },
             new()
             {
-                50,51
+                15, 20, 25
             }
         };
 
         List<MapGroup> mapGroups = new();
         List<Mapping> mappings1 = new List<Mapping>()
         {
-            new(50, 98, 2)
+            new(0, 0, 5)
         };
         
         List<Mapping> mappings2 = new List<Mapping>()
         {
-            new(52, 50, 48)
+            new(50, 15, 10)
         };
         
         mapGroups.Add(new MapGroup(mappings1));
@@ -249,7 +249,7 @@ public class Day5
         
         var globalMin = GetMinimumFromHolder(holder, mapGroups);
 
-        globalMin.Should().Be(52);
+        globalMin.Should().Be(2);
     }
 
     private uint GetMinimumFromHolder(List<List<uint>> holder, List<MapGroup> mapGroups)
@@ -325,9 +325,8 @@ public class Day5
         int answer = 3374647;
 
         var initialSeeds = GenerateOriginalSeeds();
-        List<uint> testSeeds = new List<uint> { initialSeeds[4], initialSeeds[5] };
 
-        var seeds = GenerateSeedRange(testSeeds);
+        var seeds = GenerateSeedRange(initialSeeds);
 
         var mapGroups = CreateMapGroups();
 
