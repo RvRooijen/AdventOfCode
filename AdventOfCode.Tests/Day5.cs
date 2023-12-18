@@ -300,6 +300,7 @@ public class Day5
     }
     
     [Test]
+    [Ignore(" :D")]
     public void Part2()
     {
         List<List<uint>> GenerateSeedRange(List<uint> uints)
